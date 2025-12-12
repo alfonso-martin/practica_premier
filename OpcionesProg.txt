@@ -1,0 +1,57 @@
+import pandas as pd
+
+# Ya tienes df extraído así:
+# df = pd.json_normalize(data, record_path=["matches"])
+
+# --- Preparar estructuras de datos ---
+equipos = pd.unique(df[["team1", "team2"]].values.ravel())
+
+# Diccionarios para acumular estadísticas
+victorias = {e: 0 for e in equipos}
+goles_favor = {e: 0 for e in equipos}
+goles_contra = {e: 0 for e in equipos}
+remontadas = {e: 0 for e in equipos}
+
+# --- Recorrer cada partido ---
+for _, row in df.iterrows():
+    local = row["team1"]
+    visitante = row["team2"]
+    ht = row["score.ht"] if isinstance(row["score.ht"], list) else [0,0]
+    ft = row["score.ft"]
+
+    # Goles totales
+    gl_ht, gv_ht = ht
+    gl_ft, gv_ft = ft
+
+    # Acumular goles a favor y en contra
+    goles_favor[local] += gl_ft
+    goles_contra[local] += gv_ft
+
+    goles_favor[visitante] += gv_ft
+    goles_contra[visitante] += gl_ft
+
+    # Determinar ganador
+    if gl_ft > gv_ft:
+        victorias[local] += 1
+    elif gv_ft > gl_ft:
+        victorias[visitante] += 1
+
+    # Comprobar remontada: perdía al descanso y ganó al final
+    # Local pierde al descanso y gana al final
+    if gl_ht < gv_ht and gl_ft > gv_ft:
+        remontadas[local] += 1
+    # Visitante pierde al descanso y gana al final
+    if gv_ht < gl_ht and gv_ft > gl_ft:
+        remontadas[visitante] += 1
+
+# --- Resultados ---
+
+equipo_mas_victorias = max(victorias, key=victorias.get)
+equipo_mas_goles = max(goles_favor, key=goles_favor.get)
+equipo_menos_goles = min(goles_favor, key=goles_favor.get)
+equipo_mas_remontadas = max(remontadas, key=remontadas.get)
+
+print("Equipo con más victorias:", equipo_mas_victorias, victorias[equipo_mas_victorias])
+print("Equipo más goleador:", equipo_mas_goles, goles_favor[equipo_mas_goles])
+print("Equipo menos goleador:", equipo_menos_goles, goles_favor[equipo_menos_goles])
+print("Equipo que más remontó:", equipo_mas_remontadas, remontadas[equipo_mas_remontadas])
