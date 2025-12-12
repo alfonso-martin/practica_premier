@@ -1,0 +1,5 @@
+quien gano mas partidos
+que equipo es el mas goleador/ mas goleado
+quien gana mas partidos como local/visitante
+quien remonto mas partidos
+permitir al usuario ver estadísticas de un equipo en concreto
