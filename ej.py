@@ -2,7 +2,7 @@ import json
 import pandas as pd
 import matplotlib as mpl
 
-with open(r"C:\Users\Alumno\Desktop\a.martin\OPT\EjerciciosPython\PRACTICA\premier.json") as f:
+with open(r"premier.json") as f:
     data = json.load(f)
 
 

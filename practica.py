@@ -9,15 +9,33 @@ def menu():
     while True:
         print("\n--- Menú de gráficas ---")
         print("1. Top 5 equipos con más victorias")
-        print("2. ")
-        print("3. ")
+        print("2. Equipo mas goleador")
+        print("3. Equipo menos goleador")
+        print("4. Equipo con más remontadas")
+        print("5. Equipo con más victorias")
+        print("6. Estadisticas de un equipo concreto")
+        print("7. Salir")
         opcion = input("Elige una opción: ")
 
         if opcion == "1":
             graficaVictorias(data)
+            
         elif opcion == "2":
-            print("")
+            graficaVictorias(data)
+            
         elif opcion == "3":
+            graficaVictorias(data)
+            
+        elif opcion == "4":
+            graficaVictorias(data)
+            
+        elif opcion == "5":
+            graficaVictorias(data)
+            
+        elif opcion == "6":
+            graficaVictorias(data)
+            
+        elif opcion == "7":
             print("Saliendo...")
             break
         else:
