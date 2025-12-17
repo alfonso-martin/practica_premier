@@ -7,14 +7,15 @@ import seaborn as sns
 # Menú principal
 def menu():
     while True:
-        print("\n--- Menú de gráficas ---")
-        print("1. Top 5 equipos con más victorias")
-        print("2. Equipo mas goleador")
+        print("\n---------------- Menú de gráficas ----------------")
+        print("1. Clasificacion final de la Premier")
+        print("2. Equipo más goleador")
         print("3. Equipo menos goleador")
         print("4. Equipo con más remontadas")
-        print("5. Equipo con más victorias")
-        print("6. Estadisticas de un equipo concreto")
+        print("5. Equipo con más victorias como local y/o visitante")
+        print("6. Comparacion de dos equipos")
         print("7. Salir")
+        print("----------------------------------------------------")
         opcion = input("Elige una opción: ")
 
         if opcion == "1":
@@ -33,8 +34,9 @@ def menu():
             graficaVictorias(data)
             
         elif opcion == "6":
-            graficaVictorias(data)
+            print("Equipos a seleccionar:")
             
+
         elif opcion == "7":
             print("Saliendo...")
             break
@@ -50,36 +52,66 @@ def ganador(row):
     else:
         return None
     
-
+# Sacar grafico completo de clasificacion de la premier
 def graficaVictorias(data):
-    # Extraer la lista de partidos y normalizarla
+    # Normalizar partidos
     partidos = pd.json_normalize(data, record_path=["matches"])
 
+    # Determinar ganador
     partidos["winner"] = partidos.apply(ganador, axis=1)
-    victorias = partidos["winner"].value_counts().head(5)  # Top 5
 
+    # Equipos (usando los mismos campos que ganador)
+    equipos = pd.concat([
+        partidos["team1"],
+        partidos["team2"]
+    ]).unique()
 
-    # Datos: nombres de los equipos y sus victorias
-    equipos = victorias.index
-    victorias_num = victorias.values
+    tabla = pd.DataFrame(index=equipos, columns=["Victorias", "Empates", "Derrotas"])
+    tabla = tabla.fillna(0)
 
-    # Crear gráfico de barras horizontal
-    plt.figure(figsize=(10,6))
-    plt.barh(equipos, victorias_num, color='mediumslateblue')
+    # Contabilizar resultados
+    for _, p in partidos.iterrows():
+        team1 = p["team1"]
+        team2 = p["team2"]
+        win = p["winner"]
 
-    # Poner el equipo con más victorias arriba
+        if win is None:
+            tabla.loc[team1, "Empates"] += 1
+            tabla.loc[team2, "Empates"] += 1
+        else:
+            tabla.loc[win, "Victorias"] += 1
+            perdedor = team2 if win == team1 else team1
+            tabla.loc[perdedor, "Derrotas"] += 1
+
+    # Ordenar clasificación
+    tabla = tabla.sort_values("Victorias", ascending=False)
+
+    # Datos
+    equipos = tabla.index
+    v = tabla["Victorias"]
+    e = tabla["Empates"]
+    d = tabla["Derrotas"]
+
+    gap = 0.6  # espacio visual entre sectores
+
+    plt.figure(figsize=(12, 7))
+
+    # Barras horizontales segmentadas con separación
+    plt.barh(equipos, v, height=0.45, label="Victorias")
+    plt.barh(equipos, e, left=v + gap, height=0.45, label="Empates")
+    plt.barh(equipos, d, left=v + e + 2*gap, height=0.45, label="Derrotas")
+
     plt.gca().invert_yaxis()
 
-    # Títulos
-    plt.title("Top 5 equipos con más victorias", fontsize=16)
-    plt.xlabel("Victorias")
+    plt.title("Clasificación final de la Premier", fontsize=16)
+    plt.xlabel("Partidos")
     plt.ylabel("Equipo")
+    plt.legend()
 
-    # Mostrar número de victorias al lado de cada barra
-    for i, v in enumerate(victorias_num):
-        plt.text(v + 0.1, i, str(v), va='center')
+    # Ocultar eje X porque hay gaps artificiales
+    # plt.xticks([])
 
-    # Mostrar gráfico
+    plt.tight_layout()
     plt.show()
 
 
