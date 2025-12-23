@@ -1,8 +1,13 @@
 import json
 import pandas as pd
 import matplotlib as mpl
+from pathlib import Path
 
-with open(r"premier.json") as f:
+# Cargar datos JSON
+BASE_DIR = Path(__file__).resolve().parent
+JSON_PATH = BASE_DIR / "premier.json"\
+
+with open(JSON_PATH, "r", encoding="utf-8") as f:
     data = json.load(f)
 
 

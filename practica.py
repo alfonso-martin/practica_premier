@@ -2,6 +2,7 @@ import json
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+from pathlib import Path
 
 
 # Menú principal
@@ -114,10 +115,11 @@ def graficaVictorias(data):
     plt.tight_layout()
     plt.show()
 
+# Cargar datos JSON
+BASE_DIR = Path(__file__).resolve().parent
+JSON_PATH = BASE_DIR / "premier.json"\
 
-
-
-with open(r"C:\Users\Alumno\Desktop\PRACTICA_PREMIER\premier.json", "r", encoding="utf-8") as f:
+with open(JSON_PATH, "r", encoding="utf-8") as f:
     data = json.load(f)
 
 
