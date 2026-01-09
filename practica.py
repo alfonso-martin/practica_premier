@@ -35,7 +35,22 @@ def menu():
             graficaVictorias(data)
             
         elif opcion == "6":
-            print("Equipos a seleccionar:")
+            partidos = pd.json_normalize(data, record_path=["matches"])
+            equipos = sorted(
+                pd.concat([partidos["team1"], partidos["team2"]]).unique()
+            )
+
+            print("\nEquipos disponibles:")
+            for e in equipos:
+                print("-", e)
+
+            equipo1 = input("\nSelecciona el primer equipo: ")
+            equipo2 = input("Selecciona el segundo equipo: ")
+
+            if equipo1 in equipos and equipo2 in equipos and equipo1 != equipo2:
+                compararEquipos(data, equipo1, equipo2)
+            else:
+                print("Selección inválida de equipos.")
             
 
         elif opcion == "7":
@@ -43,6 +58,8 @@ def menu():
             break
         else:
             print("Opción no válida, intenta de nuevo.")
+
+
 
 # Sacar ganador del partido
 def ganador(row):
@@ -53,6 +70,8 @@ def ganador(row):
     else:
         return None
     
+
+
 # Sacar grafico completo de clasificacion de la premier
 def graficaVictorias(data):
     # Normalizar partidos
@@ -114,6 +133,58 @@ def graficaVictorias(data):
 
     plt.tight_layout()
     plt.show()
+
+
+
+def compararEquipos(data, equipo1, equipo2):
+    partidos = pd.json_normalize(data, record_path=["matches"])
+
+    stats = {
+        equipo1: {"Victorias": 0, "Empates": 0, "Derrotas": 0},
+        equipo2: {"Victorias": 0, "Empates": 0, "Derrotas": 0}
+    }
+
+    for _, p in partidos.iterrows():
+        t1, t2 = p["team1"], p["team2"]
+        g1, g2 = p["score.ft"]
+
+        # Equipo 1
+        if equipo1 == t1 or equipo1 == t2:
+            if g1 == g2:
+                stats[equipo1]["Empates"] += 1
+            elif (equipo1 == t1 and g1 > g2) or (equipo1 == t2 and g2 > g1):
+                stats[equipo1]["Victorias"] += 1
+            else:
+                stats[equipo1]["Derrotas"] += 1
+
+        # Equipo 2
+        if equipo2 == t1 or equipo2 == t2:
+            if g1 == g2:
+                stats[equipo2]["Empates"] += 1
+            elif (equipo2 == t1 and g1 > g2) or (equipo2 == t2 and g2 > g1):
+                stats[equipo2]["Victorias"] += 1
+            else:
+                stats[equipo2]["Derrotas"] += 1
+
+    df = pd.DataFrame(stats).T
+
+    # Gráfica
+    df.plot(
+    kind="bar",
+    stacked=True,
+    figsize=(9, 6)
+)
+
+plt.title(f"Comparación de resultados: {equipo1} vs {equipo2}")
+plt.xlabel("Equipo")
+plt.ylabel("Partidos")
+plt.xticks(rotation=0)
+plt.legend(title="Resultado")
+plt.tight_layout()
+plt.show()
+
+
+
 
 # Cargar datos JSON
 BASE_DIR = Path(__file__).resolve().parent
