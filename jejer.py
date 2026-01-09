@@ -93,20 +93,21 @@ def graficaVictorias(data):
 def graficaMasGoleador(data):
     partidos = pd.json_normalize(data, record_path=["matches"])
 
-    goles = {}
+    goles = {}  #Diccionario para almacenar goles a favor por equipo
 
+    # Calcular goles a favor por equipo
     for _, row in partidos.iterrows():
-        local = row["team1"]
-        visitante = row["team2"]
-        gl, gv = row["score.ft"]
+        local = row["team1"]    #Equipo local
+        visitante = row["team2"]    #Equipo visitante
+        gl, gv = row["score.ft"]    #Goles al final del partido
 
-        goles[local] = goles.get(local, 0) + gl
-        goles[visitante] = goles.get(visitante, 0) + gv
+        goles[local] = goles.get(local, 0) + gl #Sumar goles locales
+        goles[visitante] = goles.get(visitante, 0) + gv #Sumar goles visitantes
 
-    # Preparar ECDF
-    valores = sorted(goles.values())
-    n = len(valores)
-    y = [(i + 1) / n for i in range(n)]
+    # Cálculo de ECDF (Empirical Cumulative Distribution Function)
+    valores = sorted(goles.values())    #Valores de goles a favor
+    n = len(valores)    # Número de equipos
+    y = [(i + 1) / n for i in range(n)] #Valores ECDF
 
     # Equipo más goleador
     equipo_max = max(goles, key=goles.get)
@@ -116,10 +117,11 @@ def graficaMasGoleador(data):
     y_max = y[valores.index(goles_max)]
 
     # Gráfica ECDF (más grande)
-    plt.figure(figsize=(12, 7), dpi=120)
-    plt.step(valores, y, where="post")
-    plt.scatter(goles_max, y_max, color="red", zorder=3)
+    plt.figure(figsize=(12, 7), dpi=120)    #Tamaño de la figura
+    plt.step(valores, y, where="post") #Dibuja la ECDF
+    plt.scatter(goles_max, y_max, color="red", zorder=3)    #Punto del equipo más goleador
 
+    #Mostrar nombre del equipo más goleador con formato personalizado
     plt.text(
         goles_max,
         y_max,
@@ -129,11 +131,12 @@ def graficaMasGoleador(data):
         verticalalignment="bottom"
     )
 
+    #Diferentes etiquetas y titulo de la gráfica
     plt.xlabel("Goles")
     plt.ylabel("")
     plt.title("Equipo más goleador")
     plt.grid(True)
-
+    plt.yticks(range(0,1))
     plt.tight_layout()
     plt.show()
 
@@ -148,9 +151,9 @@ def graficaMasGoleador(data):
 def graficaMenosGoleador(data):
     partidos = pd.json_normalize(data, record_path=["matches"])
 
-    goles = {}
+    goles = {}  #Diccionario para almacenar goles a favor por equipo
 
-    # Calcular goles a favor por equipo
+    #Calcular goles a favor por equipo
     for _, row in partidos.iterrows():
         local = row["team1"]
         visitante = row["team2"]
@@ -159,11 +162,11 @@ def graficaMenosGoleador(data):
         goles[local] = goles.get(local, 0) + gl
         goles[visitante] = goles.get(visitante, 0) + gv
 
-    # Equipo menos goleador
+    #Equipo menos goleador
     equipo = min(goles, key=goles.get)
     valor = goles[equipo]
 
-    # Gráfica STEM (un solo punto)
+    #Etiquetas y título de la gráfica STEM
     plt.figure()
     plt.stem([equipo], [valor])
     plt.xlabel("Equipo")
@@ -183,31 +186,43 @@ def graficaRemontadas(data):
 
     remontadas = {}
 
-    for _, row in partidos.iterrows():
-        local = row["team1"]
-        visitante = row["team2"]
+    # Calcular remontadas por equipo
+    for _, fila in partidos.iterrows():
+        equipo_local = fila["team1"]
+        equipo_visitante = fila["team2"]
 
-        ht = row["score.ht"] if isinstance(row["score.ht"], list) else [0, 0]
-        ft = row["score.ft"]
+        resultado_descanso = fila["score.ht"] if isinstance(fila["score.ht"], list) else [0, 0]   # Goles al descanso
+        resultado_final = fila["score.ft"]    # Goles al final del partido
 
-        gl_ht, gv_ht = ht
-        gl_ft, gv_ft = ft
+        goles_local_descanso, goles_visitante_descanso = resultado_descanso     #Primer valor asignado a goles_local_descanso Y segundo A goles_visitante_descanso
+        goles_local_final, goles_visitante_final = resultado_final
 
-        if gl_ht < gv_ht and gl_ft > gv_ft:
-            remontadas[local] = remontadas.get(local, 0) + 1
+        #Equipo pierde al descanso y gana al final
+        if goles_local_descanso < goles_visitante_descanso and goles_local_final > goles_visitante_final:
+            remontadas[equipo_local] = remontadas.get(equipo_local, 0) + 1
 
-        if gv_ht < gl_ht and gv_ft > gl_ft:
-            remontadas[visitante] = remontadas.get(visitante, 0) + 1
+        #Equipo visitante pierde al descanso y gana al final
+        if goles_visitante_descanso < goles_local_descanso and goles_visitante_final > goles_local_final:
+            remontadas[equipo_visitante] = remontadas.get(equipo_visitante, 0) + 1
 
-    equipo = max(remontadas, key=remontadas.get)
-    valor = remontadas[equipo]
+    #Equipo con más remontadas
+    equipo_mas_remontadas = max(remontadas, key=remontadas.get)
+    numero_remontadas = remontadas[equipo_mas_remontadas]
+
+    eje_x = [1]
+    eje_y = [numero_remontadas]
 
     plt.figure()
-    plt.bar(equipo, valor, color="orange")
-    plt.title("Equipo con más remontadas")
+    plt.stem(eje_x, eje_y, linefmt='g-', markerfmt='go', basefmt=' ')
+    plt.xticks([1], ["Equipo con más remontadas"])
+    plt.yticks(range(0, numero_remontadas + 2, 1))
     plt.ylabel("Remontadas")
-    plt.show()
+    plt.title("Equipo con más remontadas")
 
+    # Mostrar nombre del equipo
+    plt.text(1, numero_remontadas, f"  {equipo_mas_remontadas}", ha="left", va="bottom")
+
+    plt.show()
 
 
 # ================================
